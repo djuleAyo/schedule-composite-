@@ -3,40 +3,43 @@ start
   = cron
   
 cron
-  = sec:place ws min:place ws hour:place ws dom:place ws month:place ws dow:place
-  / min:place ws place ws place ws place ws place
-  / sec:place ws min:place ws hour:place ws dow:place
-  / sec:place ws min:place ws hour:place
-  / sec:place ws min:place
-  / sec:place
-
-place "string"
-	= string: [*] {return "*";}
-    /num:list {return num;}
-
-integer "integer"
-  = digits:[0-9]+ { return +digits; }
-
-list
-  = and:and			{return and;}
-  / any:any			{return any;}
-  / num:integer {return num;}
+  = ms:place s:place ws min:place ws h:place ws dm:place ws m:place ws dw:place
+    {return { ms, s, min, h, dm, m, dw}}
+  / s:place ws min:place ws h:place ws dm:place ws m:place ws dw:place
+    {return {s, min, h, dm, m, dw}}
+  / min:place ws h:place ws dm:place ws m:place ws dw:place
+    {return { min, h, dm, m, dw};}
+marked_place
+  = unit:unit place:place {return [place[0], unit, ...place.slice(1)];}
   
-and
-  = newNum:integer "," num:and {
-  		if(typeof(num) === 'number') { num = ["and", newNum, num]; return num;} 
-        if(num[0] ==='any') return ["and", newNum, num];
-        if(num[0] ==='and') return [...num, newNum];
-  }
-  / any:any "," num:and {
-  		return ["and", any, num]
-  }
-  / any:any	{return any; }
-  / num:integer {return num;}
+unit
+  ="ms"
+  /"s"
+  /"min"
+  /"h"
+  /"dm"
+  /"m"
+  /"dw"
 
-any
-  = left:integer "-" right:integer {return ["any", left, right];}
+place
+  = newElem:placeElement "," place:place {place.push(newElem); return place;}
+  / elem:placeElement {return [elem];}
+  
+placeElement
+  = range
+  / interval
+  / integer
+  / "*"
+  
+interval
+  = int1:integer "~" int2:integer {return ["interval", int1, int2];}
+
+range
+  = left:integer "-" right:integer {return ["range", left, right];}
 
 ws "string"
-  = ws: [ ]
+  = " "
+  
+integer "integer"
+  = digits:[0-9]+ { return parseInt(digits.join(""), 10); }
 `;
