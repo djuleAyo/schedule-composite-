@@ -33,6 +33,10 @@ export module Traverse
     }
 }
 
+/**
+ * Only fields that are in object will be traversed and if they are not no error
+ * will be raised
+ */
 function traverseChildren(obj: Object, cb: Function, fieldsToTraverse: Array<string>)
 {
     for (const key in obj) {

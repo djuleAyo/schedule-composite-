@@ -1,4 +1,5 @@
 import { diminishedCronGrammar as cronGrammar } from "./cronGrammar"
+import { DateUtil } from "../util/dateUtil";
 
 const peg = require('pegjs')
 
@@ -14,18 +15,8 @@ type PatternObject =  {
     m: Array<PlaceElement>,
     dow: Array<PlaceElement>,
 }
-const TimeUnit = ["ms", "s", "min", "h", "dom", "m", "dow"]
-const TimeUnitValue = {
-    // following are mathematical half segments [)
-    ms: [0, 1000],
-    s: [0, 60],
-    min: [0, 60],
-    h: [0, 24],
-    dom: [1, 32],
-    m: [1, 13],
-    dow: [0, 8]
-
-}
+const TimeUnit = ["ms", "s", "min", "h", "dm", "m", "dw"]
+const timeUnitValue = DateUtil.timeUnitValue;
 /**
  * DeminishedCron can easily describe daily patterns, monthly patterns, hourly 
  * patterns, ... And those are the onces we need to describe the most, if not
@@ -39,66 +30,78 @@ export class DiminishedCron
 
     patternObject: PatternObject
 
-    constructor(
-        pattern: string
-    ) {
+    constructor(pattern: string) {
         try {
             this.patternObject = DiminishedCron.parser.parse(pattern)
+            this.purgeStars()
+            this.checkPatternSemantics()
         } catch (error) {
             throw error
         }
-        this.purgeStars()
-        this.checkValues()
     }
 
+    getTimeSet(
+        start = new Date(), 
+        end = new Date(new Date().getTime() + DateUtil.msValues.d)
+    ) {
+
+    }
+
+/* PRIVATE ⛔️-----------------------------------------------------------------*/
+    /**
+     * Make places made of * undefined
+     */
     private purgeStars() {
         TimeUnit.forEach(unit => {
             const unitVal = this.patternObject[unit]
-            if (unitVal && unitVal.length === 0 && unitVal[0] === "*")
-               this.patternObject[unitVal] = undefined
+            
+            if (!unitVal || unitVal.length === 1 && unitVal[0] === "*")
+               this.patternObject[unit] = undefined
         })
     }
 
     /**
-     * Throw on level of the method for more verbose errors
+     * Check if patternObject satisfies TimeUnitValue 
      */
-    private checkValues(): void {
-
+    private checkPatternSemantics(): void {
         for (let unit of TimeUnit) {
             let value = this.patternObject[unit]
             
             if (!value) continue
 
-            value.forEach(element => {
-
-                console.log(`checking for `, element, unit)
-                
-                if (typeof(element) === 'number' && !this.checkValue(element, unit)) 
-                    throw new Error(`Invalid value ${element} for unit ${unit}`)
-                
-                if(typeof(element) !== 'number' && !this.checkArrayValues(element.slice(1), unit))
-                    throw new Error(`Invalid values ${element} for unit ${unit}`)
-            });
+            this.checkPlaceSemantics(value, unit);
         }
     }
 
-    private checkValue(value: number, unit: string): boolean {
-        console.log(`check value ${value} ${unit}`);
-        
-        return value >= TimeUnitValue[unit][0] && TimeUnitValue[unit][1] > value
+    private checkPlaceSemantics(place: Array<any>, unit): void {
+        place.forEach(element => {
+            if (typeof(element) === 'number' && !this.checkValue(element, unit)) 
+                throw new Error(`Invalid value ${element} for unit ${unit}`)
+            
+            if(typeof(element) !== 'number' && !this.checkArrayValues(element.slice(1), unit))
+                throw new Error(`Invalid values ${element} for unit ${unit}`)
+        });
     }
 
+    private checkValue(value: number, unit: string): boolean {
+        return value >= timeUnitValue[unit][0] && timeUnitValue[unit][1] > value
+    }
+
+    /**
+     * Now used for both interval and range
+     */
     private checkArrayValues(array: Array<number>, unit: string): boolean {
-        console.log(`checking array values`, array, unit);
-        
         if (array[0] > array[1])
-            throw new Error(`Both interval and range sytax require left limit to be smaller.`);
-        
+            throw new Error(
+                `Both interval and range syntax require left limit to be smaller.`
+            );
+
         for (let x of array) {
             if (!this.checkValue(x, unit)) return false
         }
         return true
     }
+/**/
 }
 
 
