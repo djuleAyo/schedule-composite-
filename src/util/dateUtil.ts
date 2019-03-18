@@ -27,5 +27,11 @@ export class DateUtil
         dw: [0, 8]
     
     }
-
+    static after(original: Date, ms: number): Date  {
+        return new Date(original.getTime() + ms)    }
+    static before(original: Date, ms: number): Date {
+        return new Date(original.getTime() - ms)    }
+    static isValidTimeUnitValue(value: number, unit: string): boolean {
+        return (value >= DateUtil.msValues[unit][0] 
+            && DateUtil.msValues[unit][1] > value)          }
 }

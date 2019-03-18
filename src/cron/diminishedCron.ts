@@ -42,7 +42,7 @@ export class DiminishedCron
 
     getTimeSet(
         start = new Date(), 
-        end = new Date(new Date().getTime() + DateUtil.msValues.d)
+        end = DateUtil.after(new Date(), DateUtil.msValues.d)
     ) {
 
     }
@@ -75,29 +75,22 @@ export class DiminishedCron
 
     private checkPlaceSemantics(place: Array<any>, unit): void {
         place.forEach(element => {
-            if (typeof(element) === 'number' && !this.checkValue(element, unit)) 
+            if (typeof(element) === 'number' 
+            && !DateUtil.isValidTimeUnitValue(element, unit)) 
                 throw new Error(`Invalid value ${element} for unit ${unit}`)
             
-            if(typeof(element) !== 'number' && !this.checkArrayValues(element.slice(1), unit))
-                throw new Error(`Invalid values ${element} for unit ${unit}`)
-        });
-    }
-
-    private checkValue(value: number, unit: string): boolean {
-        return value >= timeUnitValue[unit][0] && timeUnitValue[unit][1] > value
-    }
-
+            if(typeof(element) !== 'number' 
+            && !this.checkArrayValues(element.slice(1), unit))
+                throw new Error(`Invalid values ${element} for unit ${unit}`) });}
     /**
      * Now used for both interval and range
      */
     private checkArrayValues(array: Array<number>, unit: string): boolean {
         if (array[0] > array[1])
             throw new Error(
-                `Both interval and range syntax require left limit to be smaller.`
-            );
-
+                `Both interval and range syntax require left limit to be smaller.`);
         for (let x of array) {
-            if (!this.checkValue(x, unit)) return false
+            if (!DateUtil.isValidTimeUnitValue(x, unit)) return false
         }
         return true
     }
