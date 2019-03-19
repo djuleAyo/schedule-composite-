@@ -1,19 +1,19 @@
 import { diminishedCronGrammar as cronGrammar } from "./cronGrammar"
-import { DateUtil } from "../util/dateUtil";
+import { DateUtil, TimeUnit } from "../util/dateUtil";
+import { Interval } from "../interval";
 
 const peg = require('pegjs')
 
-type Interval = ["interval", number, number]
 type Range = ["range", number, number]
-type PlaceElement = Interval | Range | "*"
+type PlaceElement = ["interval", number, number] | Range | "*"
 type PatternObject =  {
     ms: Array<PlaceElement>, 
     s: Array<PlaceElement>,
     min: Array<PlaceElement>,
     h: Array<PlaceElement>,
-    dom: Array<PlaceElement>,
+    dm: Array<PlaceElement>,
     m: Array<PlaceElement>,
-    dow: Array<PlaceElement>,
+    dw: Array<PlaceElement>,
 }
 const TimeUnit = ["ms", "s", "min", "h", "dm", "m", "dw"]
 const timeUnitValue = DateUtil.timeUnitValue;
@@ -35,16 +35,14 @@ export class DiminishedCron
             this.patternObject = DiminishedCron.parser.parse(pattern)
             this.purgeStars()
             this.checkPatternSemantics()
+            this.purgeRanges()
         } catch (error) {
             throw error
         }
     }
 
-    getTimeSet(
-        start = new Date(), 
-        end = DateUtil.after(new Date(), DateUtil.msValues.d)
-    ) {
-
+    getTimeSet(i: Interval) {
+        
     }
 
 /* PRIVATE ⛔️-----------------------------------------------------------------*/
@@ -56,21 +54,40 @@ export class DiminishedCron
             const unitVal = this.patternObject[unit]
             
             if (!unitVal || unitVal.length === 1 && unitVal[0] === "*")
-               this.patternObject[unit] = undefined
+               this.patternObject[unit] = void 0
+        })
+    }
+    private purgeRanges() {
+        this.iteratePlaces((place, unit) => {
+            place.map(placeElement => {
+                if (!this.isRange(placeElement)) return
+                
+            })
         })
     }
 
+    private isRange(a: PlaceElement): boolean {
+        return a[0] === 'range'
+    }
+    private spreadRange(r: Range): Array<number> {
+        const retVal = []
+        for(let i = r[1]; i <= r[2]; i++)
+            retVal.push(i)
+        return retVal
+    }
+
+    private iteratePlaces(cb: (place: Array<PlaceElement>, unit: TimeUnit) => void) {
+        for(let unit of TimeUnit) {
+            let value = this.patternObject[unit];
+            if (!value) continue
+            cb(value, <TimeUnit>unit);
+        }
+    }
     /**
      * Check if patternObject satisfies TimeUnitValue 
      */
     private checkPatternSemantics(): void {
-        for (let unit of TimeUnit) {
-            let value = this.patternObject[unit]
-            
-            if (!value) continue
-
-            this.checkPlaceSemantics(value, unit);
-        }
+        this.iteratePlaces(this.checkPlaceSemantics)
     }
 
     private checkPlaceSemantics(place: Array<any>, unit): void {
@@ -96,7 +113,6 @@ export class DiminishedCron
     }
 /**/
 }
-
 
 // ✅❓ ------------------------------------------------------------------------
 if (process.argv.length > 2 && process.argv[2] === 'sa-test')

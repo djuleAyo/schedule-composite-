@@ -1,14 +1,8 @@
+export type TimeUnit = 'ms' | 's' | 'min' | 'h' | 'dm' | 'm' | 'dw';
 export class DateUtil
 {
-    /**
-     * Check if 2 dates represent the same moment in time.
-     */
-    static equal(date1: Date, date2: Date): boolean
-    {
-        return date1.getTime() === date2.getTime();
-    }
-
     static msValues = {
+        ms: 1,
         s: 1000,
         min: 60*1000,
         h: 60*60*1000,
@@ -27,6 +21,15 @@ export class DateUtil
         dw: [0, 8]
     
     }
+    static dateMethodForUnit = {
+        ms: 'Milliseconds',
+        s: 'Seconds',
+        min: 'Minutes',
+        h: 'Hours',
+        dm: 'Date',
+        m: 'Month',
+        dw: 'Day',
+    }
     static after(original: Date, ms: number): Date  {
         return new Date(original.getTime() + ms)    }
     static before(original: Date, ms: number): Date {
@@ -34,4 +37,11 @@ export class DateUtil
     static isValidTimeUnitValue(value: number, unit: string): boolean {
         return (value >= DateUtil.msValues[unit][0] 
             && DateUtil.msValues[unit][1] > value)          }
+    /**
+     * Check if 2 dates represent the same moment in time.
+     */
+    static equal(date1: Date, date2: Date): boolean
+    {
+        return date1.getTime() === date2.getTime();
+    }
 }
