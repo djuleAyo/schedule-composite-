@@ -44,4 +44,27 @@ export class DateUtil
     {
         return date1.getTime() === date2.getTime();
     }
+    static dateStringEu(d: Date): string {
+        return `${d.getDate()}.${d.getMonth()}.${d.getFullYear()}`;
+    }
+    static timeString(d: Date): string {
+        return `${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`;
+    }
+    static dateTimeString(d: Date): string {
+        return `${DateUtil.dateStringEu(d)} ${DateUtil.timeString(d)}`;
+    }
+
+    static isSameDate(d1: Date, d2: Date): boolean {
+        return (d1.getFullYear() === d2.getFullYear()
+            && d1.getMonth() === d2.getMonth()
+            && d1.getDate() === d2.getDate()
+        )
+    }
+}
+
+// ✅❓ ------------------------------------------------------------------------
+
+if (process.argv.length > 2 && process.argv[2] === 'sa-test') {
+    console.log(DateUtil.dateStringEu(new Date));
+    console.log(DateUtil.timeString(new Date));
 }

@@ -22,9 +22,13 @@ export class Interval {
     contains(something: Date | Interval | number, unit?: TimeUnit): boolean {
         if (something.constructor === Date) 
             return this.containsDate(<Date>something);
-        if (something.constructor === Interval)
-            return ( this.containsDate((<Interval>something).start) 
-            && this.containsDate((<Interval>something).end))
+        if (something.constructor === Interval) {
+            const start = (<Interval>something).start;
+            const end = (<Interval>something).end;
+            return ((this.containsDate(start) || DateUtil.equal(this.start, start))
+                && (this.containsDate(end) || DateUtil.equal(this.end, end))
+            )
+        }
         if (typeof(something) === 'number') {
             if (unit === undefined) 
                 throw new Error('Unit must be provided when first argument is a number.');
@@ -59,7 +63,19 @@ export class Interval {
         return void 0
     }
 
-    toString() {return `(${this.start}, ${this.end})`}
+    toString() {
+        const du = DateUtil;
+        if (DateUtil.isSameDate(this.start, this.end)) {
+            return `${du.dateStringEu(this.start)} ${du.timeString(this.start)}-${du.timeString(this.end)}`
+        }
+        return `${du.dateStringEu(this.start)} ${du.timeString(this.start)}\t${du.dateStringEu(this.end)} ${du.timeString(this.end)}`
+    }
+    equals(i: Interval): boolean {
+        return (
+            DateUtil.equal(this.start, i.start)
+            && DateUtil.equal(this.end, i.end)
+        )
+    }
 
     private containsDate(date: Date): boolean {
         return date > this.start && date < this.end
@@ -95,6 +111,8 @@ export class Interval {
 // ✅❓-------------------------------------------------------------------------
 if (process.argv.length > 2 && process.argv[2] === 'sa-test') {
     let test = new Interval();
+    console.log( 'test is ' + test );
+    
 
     console.log(test.contains(5, 'h'));
 }
