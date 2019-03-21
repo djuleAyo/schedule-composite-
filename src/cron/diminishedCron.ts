@@ -41,8 +41,12 @@ export class DiminishedCron
         }
     }
 
-    getTimeSet(i: Interval) {
+    getTimeSet(i: Interval): Array<Interval | Date> {
+        const retVal = []
+
         
+
+        return retVal
     }
 
 /* PRIVATE ⛔️-----------------------------------------------------------------*/

@@ -54,9 +54,15 @@ export class Interval {
     /**
      * Default granulation for date is 1 ms. To avoid all that processing ms 
      * param is not optional
+     * Start is skipped only when ms. Interval is not of 0 length but does not
+     * contain star and end point. If measuring in ms then it is possible to not
+     * contain start/end. Otherwise we are checking greater time unit but interval
+     * is no 0 length so it must contain and start should not be skipped
      */
-    find(ms:number, cb: (date: Date) => boolean): Date {
-        let after = this.start
+    find(ms:number, cb: (date: Date) => boolean, skipStart = false): Date {
+        let after;
+        if(skipStart) after = DateUtil.after(this.start, ms) 
+        else after = this.start
         while (after < this.end) {
             if (cb(after)) return after;
             after = DateUtil.after(after, ms);}
@@ -81,12 +87,13 @@ export class Interval {
         return date > this.start && date < this.end
     }
     private containsUnit(value: number, unit: TimeUnit): boolean {
-        if (DateUtil.isValidTimeUnitValue(value, unit))
+        if (!DateUtil.isValidTimeUnitValue(value, unit))
             throw new Error(`Value ${value} is not valid for time unit ${unit}`);
         const dateMethod = `get${DateUtil.dateMethodForUnit[unit]}`;
         const iterationStep = this.getIterationStep(unit);
         const found = this.find(iterationStep, date => 
-            date[dateMethod]() === value)
+            date[dateMethod]() === value,
+            unit === 'ms' ? true : false)
         return !!found
     }
     /**

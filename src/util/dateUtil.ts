@@ -34,15 +34,27 @@ export class DateUtil
         return new Date(original.getTime() + ms)    }
     static before(original: Date, ms: number): Date {
         return new Date(original.getTime() - ms)    }
-    static isValidTimeUnitValue(value: number, unit: string): boolean {
-        return (value >= DateUtil.msValues[unit][0] 
-            && DateUtil.msValues[unit][1] > value)          }
+    
+    
     /**
-     * Check if 2 dates represent the same moment in time.
+     * Check if 2 dates represent the same moment in time. Don't have to be the same object
      */
-    static equal(date1: Date, date2: Date): boolean
-    {
+    static equal(date1: Date, date2: Date): boolean {
         return date1.getTime() === date2.getTime();
+    }
+    static isSameDate(d1: Date, d2: Date): boolean {
+        return (d1.getFullYear() === d2.getFullYear()
+            && d1.getMonth() === d2.getMonth()
+            && d1.getDate() === d2.getDate()
+        )
+    }
+
+    
+    static isValidTimeUnitValue(value: number, unit: string): boolean {
+        if (value !== Math.floor(value)) 
+            throw new Error(`Must use integer for value of a specific time unit`)
+        return (value >= DateUtil.timeUnitValue[unit][0] 
+            && DateUtil.timeUnitValue[unit][1] > value)
     }
     static dateStringEu(d: Date): string {
         return `${d.getDate()}.${d.getMonth()}.${d.getFullYear()}`;
@@ -54,12 +66,6 @@ export class DateUtil
         return `${DateUtil.dateStringEu(d)} ${DateUtil.timeString(d)}`;
     }
 
-    static isSameDate(d1: Date, d2: Date): boolean {
-        return (d1.getFullYear() === d2.getFullYear()
-            && d1.getMonth() === d2.getMonth()
-            && d1.getDate() === d2.getDate()
-        )
-    }
 }
 
 // ✅❓ ------------------------------------------------------------------------
