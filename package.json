@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "sa-test-all": "files=`find ./src -type f -name *.ts`; for file in $files; ts-node $file sa-test; done",
-    "test": "mocha -r ts-node/register test/**/*.ts --reporter=nyan"
+    "test": "mocha -r ts-node/register test/**/*.ts --reporter=nyan",
+    "mocha": "mocha -w -r ts-node/register -extension ts --reporter=nyan"
   },
   "author": "",
   "license": "ISC",
