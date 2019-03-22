@@ -1,11 +1,12 @@
 import { diminishedCronGrammar as cronGrammar } from "./cronGrammar"
 import { DateUtil, TimeUnit } from "../util/dateUtil";
 import { Interval } from "../interval";
+import { ArrayUtil } from "../util/array";
 
 const peg = require('pegjs')
 
 type Range = ["range", number, number]
-type PlaceElement = ["interval", number, number] | Range | "*"
+type PlaceElement = ["interval", number, number] | Range | "*" | number
 type PatternObject = {
   ms: Array<PlaceElement>,
   s: Array<PlaceElement>,
@@ -62,15 +63,21 @@ export class DiminishedCron {
   }
   private purgeRanges() {
     this.iteratePlaces((place, unit) => {
-      place.map(placeElement => {
-        if (!this.isRange(placeElement)) return
-
+      let ranges = place.filter(placeElem => this.isRange(placeElem))
+      this.patternObject[unit] = place.filter(placeElem => !this.isRange(placeElem))
+      
+      ranges.forEach(range => {
+        const values = ArrayUtil.range(<number>range[1], <number>range[2])
+        values.forEach(value => {
+          if(!(this.patternObject[unit].find(x => x === value)))
+          this.patternObject[unit].push(value)
+        })
       })
     })
   }
 
   private isRange(a: PlaceElement): boolean {
-    return a[0] === 'range'
+    return a.constructor === Array && a[0] === 'range'
   }
   private spreadRange(r: Range): Array<number> {
     const retVal = []
@@ -89,11 +96,11 @@ export class DiminishedCron {
   /**
    * Check if patternObject satisfies TimeUnitValue 
    */
-  private checkPatternSemantics(): void {
-    this.iteratePlaces(this.checkPlaceSemantics)
+  checkPatternSemantics(): void {
+    this.iteratePlaces(this.checkPlaceSemantics.bind(this))
   }
 
-  private checkPlaceSemantics(place: Array<any>, unit): void {
+  checkPlaceSemantics(place: Array<any>, unit): void {
     place.forEach(element => {
       if (typeof (element) === 'number'
         && !DateUtil.isValidTimeUnitValue(element, unit))
@@ -107,7 +114,7 @@ export class DiminishedCron {
   /**
    * Now used for both interval and range
    */
-  private checkArrayValues(array: Array<number>, unit: string): boolean {
+  checkArrayValues(array: Array<number>, unit: string): boolean {
     if (array[0] > array[1])
       throw new Error(
         `Both interval and range syntax require left limit to be smaller.`);
