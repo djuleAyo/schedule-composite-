@@ -36,6 +36,7 @@ export class DiminishedCron {
       this.purgeStars()
       this.checkPatternSemantics()
       this.purgeRanges()
+      this.purgeIntervals()
     } catch (error) {
       throw error
     }
@@ -47,6 +48,11 @@ export class DiminishedCron {
 
 
     return retVal
+  }
+
+
+  purgeIntervals() {
+    
   }
 
   /* PRIVATE ⛔️-----------------------------------------------------------------*/
